@@ -166,10 +166,10 @@ Request: POST `/v1/lookup` with a JSON body (`Content-Type: application/json`):
 
 - `word` (required): the word the client's tokenizer picked out. At most 64 characters.
 - `lang` (required): a language pair the server lists in metadata.
-- `context` (optional): the sentence or subtitle line containing `word`. At most 500 characters. See Lookup context.
+- `context` (optional): the sentence or subtitle line containing `word`, or a part of it around `word`. At most 500 characters. See Lookup context.
 - `at` (optional): a number, which occurrence of `word` in `context` was clicked. See Lookup context.
 
-Lengths are counted in UTF-16 code units. A client does not look up a longer `word`, and sends a lookup without `context` when the sentence is longer. A server may answer a longer one with `400` `bad_request`.
+Lengths are counted in UTF-16 code units. A client does not look up a longer `word`. When the sentence is longer than 500, it sends the part around `word` (see Lookup context), and without `context` when it can't. A server may answer a longer `context` with `400` `bad_request`.
 
 Response:
 
@@ -307,7 +307,7 @@ Example:
 { "word": "Tomaten", "lang": "de_en", "context": "Er hat Tomaten auf den Augen." }
 ```
 
-- `context` is one sentence or subtitle line that contains `word`.
+- `context` is one sentence or subtitle line that contains `word`. When the sentence is longer than 500 characters, the client sends the part of it around `word`: the clause containing it, cut at `,` `;` `:` or a dash, together with whole neighbouring clauses while it fits, or else the words around `word`. The server treats it like a sentence; a phrase is only found inside it.
 - The client sends `context` only to servers that list it, and per server only as the user chose when binding: from all sites, from all sites except ones the user blocked (the default), or never.
 - `at` (optional, only with `context`): the 1-based occurrence of `word` in `context` that was clicked. Both sides count exact copies of `word` in the `context` string as sent: left to right, without overlap, case-sensitive, before any normalization. Copies inside longer words count too (`кот` inside `который`, `восток` inside `северо-восток`), so client and server get the same number without agreeing on word boundaries. Example: `"word": "восток", "context": "...", "at": 2`. The server keeps only phrase entries matched at that occurrence. Without `at`, the server may be conservative with words that occur more than once. `at` applies with or without `context-match`.
 - Multi-word entries (phrases, idioms) are ordinary entries with a multi-word `lemma`. Entries that match the context come first, phrases before single words.
