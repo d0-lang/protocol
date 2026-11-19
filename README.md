@@ -1,7 +1,5 @@
 # d0 lookup protocol
 
-**Look up a word in the sentence where you met it.**
-
 The d0 lookup protocol is how a reading app (the *client*) asks a dictionary *server* about a word. The client sends the word you clicked, and the sentence around it if you allow that; the server answers with dictionary entries, and says which part of the sentence they belong to.
 
 Any client works with any server. A user adds the servers they trust and picks one per language.
