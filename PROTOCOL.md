@@ -277,7 +277,7 @@ Rules:
 - `entries`: a server should send one per headword (`lemma`, `pos`, `labels` and `pron.reading` together); the client does not rely on it. Different grammar means separate entries (`der See` "lake", `die See` "sea"), and so does a different reading (`力` as ちから and as りき). Different meanings of one headword are senses of one entry (`die Mutter` "mother" and "nut"). The client keeps the server's order and does not merge entries.
 - `lemma`: the headword as a learner's dictionary prints it, with marks texts leave out (`соба́ка`) and, where the server chooses, what is learned with the word (`der Hund`, `der/das Bonbon`). Grammar a dictionary prints as an abbreviation goes in `labels`.
 - `pos`: a Universal Dependencies tag (`NOUN`, `VERB`, `ADJ`, ...), or `X` when none fits.
-- `labels`: optional tags shown next to the headword, mostly grammar (`["f", "anim"]`, `["pf"]`). The server picks the strings, and the client shows them without interpreting them. A server may explain them (see Label explanations).
+- `labels`: optional tags shown next to the headword, mostly grammar (`["f", "anim"]`, `["pf"]`), and the form that matched (`["3sg pres"]`). The server picks the strings, and the client shows them without interpreting them. A server may explain them (see Label explanations).
 - `senses[].glosses`: at least one string. What the word means in this sense, in the pair's target language: one or more equivalents (`["mother"]`), or a definition, which a same-language pair always sends.
 - `senses[].see`: optional words the sense points at (`"synonym of grządka"` → `["grządka"]`). It names a word, never a sense, written as its entry's `lemma` (`der Hund`, not `Hund`), one per lemma when there are several (`der See`, `die See`). Each must have an entry on this server. Following one is a lookup of that string that shows only entries with that `lemma`. Clients may ignore it.
 - `sources`: optional links to the pages the entry is built from (the word's Wiktionary page; two when a meaning was copied from a base word's page). The client shows a link only when its origin is the origin of a `url` in the metadata `sources`, and names it with that source's `name` (see Sources). An entry the server wrote itself has none.
@@ -294,7 +294,7 @@ Rules:
     - The server sends one split, the one it finds most likely, and no alternatives. The split is a flat list: a piece has no pieces of its own, and how finely to cut is the server's choice (`Haupt` + `bahnhofsuhr`).
     - A response may hold a split and entries for the whole word together (`送る` for `お送り`, next to the pieces `お` and `送り`).
     - Endings are ordinary entries: a canonical `lemma` (`-ssa` for `ssa` and `ssä`), their meaning as the gloss, and `pos` `X` unless a UD tag fits (`AUX`). The segment `text` stays the surface form.
-- Not in v1: inflected forms, inflection tables, and usage labels (archaic, colloquial).
+- Not in v1: a word's inflected forms and inflection tables, and usage labels (archaic, colloquial). The form that matched may be a label (see Note: tokenizing and deinflection).
 - Not found: `200` with `{"entries": []}`. Errors: `400` with `{"error": "bad_request"}` or `{"error": "unsupported_lang"}`.
 
 ### Lookup context (optional)
@@ -376,5 +376,5 @@ Example: the user clicks `勉強` in `私は毎日日本語を勉強していま
 - The client only finds the piece of text the user clicked, with the browser's word segmenter. It needs no tokenizer per language, though one may be added for some languages later. The server receives that piece as it appears in the text, plus `context` as described above.
 - What the piece belongs to in the sentence is found on the server, from `context`: German separable verbs, phrases, hyphen-joined words, and word boundaries in Japanese and Chinese.
 - A segmenter without a dictionary cuts inflected words short in scripts without spaces (`Intl.Segmenter` splits `食べました` into `食`, `べ`, `ま`, `した`). With `context`, the server finds the whole word around the click and returns it as `match`; without `context` it answers the piece as sent.
-- Deinflection happens on the server: an inflected word (`Mütter`) returns the entries of its base form (`Mutter`). The response does not say which form matched.
+- Deinflection happens on the server: an inflected word (`Mütter`) returns the entries of its base form (`Mutter`). The server may name the form that matched with `labels` on that entry, explained like any other label (`va` returns `aller` with `3sg pres` and `2sg imp`, since it is both; `並んで` returns `並ぶ` with `て form`). It names only the matched form, never the rest of the word's forms.
 - The server returns all matching entries. Picking the right sense is out of scope for this protocol.
